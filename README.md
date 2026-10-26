@@ -178,3 +178,12 @@ bash docker-push.sh
 The script publishes `ghcr.io/groskopf/onsite-print-event:<IMAGE_TAG>` and
 increments the patch version in `.env` only after a successful push. Do not
 commit credentials or copy a populated `.env` from another project.
+
+Alternatively, trigger the **Publish release** GitHub Actions workflow from
+the Actions tab (`workflow_dispatch` only, runs from `main`). It reads the
+pending `IMAGE_TAG` from `.env`, builds and pushes the image to GHCR using the
+built-in `GITHUB_TOKEN`, tags the published commit on `main` with that version
+(no `v` prefix), and commits the incremented `.env` back to `main`. This
+requires a one-time repository setting: allow the GitHub Actions bot to
+bypass `main`'s branch protection for direct pushes, since the workflow pushes
+a tag and a commit straight to `main` without a pull request.
