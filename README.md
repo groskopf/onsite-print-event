@@ -75,6 +75,10 @@ on the same path; an attendee that is already gone counts as deleted. A duplicat
 returns 409 with detail code `attendee_exists`. Confirmed duplicates are
 re-sent with `?allow_duplicate=true`.
 
+Check-in shows a link and QR code next to the page title that open the
+`/checkin/` scanner app with this event already selected
+(`/checkin/?event={event_code}`), so desk staff do not type the event code.
+
 Check-in first asks which of the event's printers this desk uses. Only
 printers with a booking covering today can be chosen; the choice is remembered
 per event in browser storage, and "Change printer" picks another. The attendee
