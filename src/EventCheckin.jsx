@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import QRCode from 'qrcode'
 import { Icon } from './shell.jsx'
 import { fetchCollection } from './api.js'
 import { AttendeeCells, AttendeeSearch, SortableHeadings } from './attendee-list.jsx'
@@ -54,6 +55,36 @@ function PrinterPicker({ printers, selectedCode, onSelect }) {
         )
       })}
     </ul>
+  )
+}
+
+const checkinUrl = (eventCode) =>
+  new URL(`/checkin/?event=${encodeURIComponent(eventCode)}`, window.location.origin).href
+
+function ScannerLink({ eventCode }) {
+  const url = checkinUrl(eventCode)
+  const [qr, setQr] = useState({ url: null, image: null })
+
+  useEffect(() => {
+    let current = true
+    QRCode.toDataURL(url, { margin: 1, width: 192, errorCorrectionLevel: 'M' })
+      .then((image) => { if (current) setQr({ url, image }) })
+      .catch(() => { if (current) setQr({ url, image: null }) })
+    return () => { current = false }
+  }, [url])
+
+  const image = qr.url === url ? qr.image : null
+  return (
+    <aside className="checkin-scanner-link" aria-labelledby="checkin-scanner-heading">
+      {image
+        ? <img src={image} width="96" height="96" alt="QR code that opens the check-in scanner for this event" />
+        : <span className="checkin-scanner-qr-placeholder" aria-hidden="true" />}
+      <div>
+        <h2 id="checkin-scanner-heading">Check-in scanner</h2>
+        <p>Scan the QR code or open the link on a phone. The event is selected automatically.</p>
+        <a href={url} target="_blank" rel="noreferrer">Open scanner app</a>
+      </div>
+    </aside>
   )
 }
 
@@ -148,19 +179,20 @@ export default function EventCheckin({ event }) {
 
   return (
     <>
-      <div className="editor-title-row">
+      <div className="editor-title-row checkin-title-row">
         <div>
           <p className="eyebrow">{event.name}</p>
           <h1>Check-in</h1>
           <p className="subtitle">
             {ready ? `Name tags print on ${printerName(printer)}.` : 'Choose the printer for this check-in desk.'}
           </p>
+          {ready && (
+            <button className="secondary-button checkin-change-printer" type="button" onClick={() => setChoosing(true)}>
+              <Icon name="printer" size={16} />Change printer
+            </button>
+          )}
         </div>
-        {ready && (
-          <button className="secondary-button" type="button" onClick={() => setChoosing(true)}>
-            <Icon name="printer" size={16} />Change printer
-          </button>
-        )}
+        <ScannerLink eventCode={event.code} />
       </div>
       {loading ? <p className="list-message" role="status">Loading check-in...</p> : error ? (
         <div className="load-error" role="alert">
